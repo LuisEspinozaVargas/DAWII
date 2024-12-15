@@ -1,0 +1,47 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+      MYSQL_DATABASE: examen
+    ports:
+      - "3306:3306"
+
+  cliente-service:
+    build:
+      context: ./cliente-service
+      dockerfile: Dockerfile
+    container_name: cliente-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - mysql
+    restart: always
+
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mysql
+    restart: always
+
+  bff-service:
+    build:
+      context: ./bff-service
+      dockerfile: Dockerfile
+    container_name: bff-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - cliente-service
+      - product-service
+    restart: always
+    
+    environment:
+      - CLIENTE_SERVICE_URL=http://client-service:8083/api/clientes
+      - PRODUCT_SERVICE_URL=http://product-service:8082/api/productos
